@@ -1,0 +1,3 @@
+[console_scripts]
+tapioca = opentapioca.cli:cli
+

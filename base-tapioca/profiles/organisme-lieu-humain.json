@@ -1,0 +1,14 @@
+{
+        "language": "fr",
+        "name": "organisme-lieu-humain",
+        "solrconfig": "frenchtapioca-schema",
+        "restrict_properties": [],
+        "restrict_types": [
+            {"type": "Q43229", "property": "P31"},
+            {"type": "Q618123", "property": "P31"},
+            {"type": "Q5", "property": "P31"}
+        ],
+        "alias_properties": [
+            
+        ]
+}

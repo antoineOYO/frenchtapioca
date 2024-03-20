@@ -1,0 +1,91 @@
+conda update conda ;
+conda create -n venvfrenchtapioca python=3.10.13 anaconda ;
+#################################################
+conda activate venvfrenchtapioca ; 
+pip install nifconverter 
+#################################################
+nifconverter -i my_dbpedia_nif_file.ttl -o my_wikidata_nif_file.ttl
+#################################################
+
+# Commandes :
+cd /home/antoine/solr-8.11.2
+bin/solr start -c -m 4g ;
+# vérifier lesquels existent déjà : bin/solr zk ls /configs -z localhost:998
+#plus d'infos sur l'un : bin/solr zk ls /configs/fr-loc-tapioca -z localhost:9983
+bin/solr zk -upconfig -z localhost:9983 -n fr-loc-tapioca -d configsets/fr-loc-tapioca
+# et pour supprimer : bin/solr zk rm -r /configs/fr-loc-tapioca -z localhost:9983
+
+
+cd /home/antoine/Documents/GitHub/frenchtapioca/base-tapioca ;
+conda activate venvfrenchtapioca ;
+pip install -r requirements.txt ;
+pip install -e . # or python setup.py install ;
+
+
+tapioca train-bow data/latest-all.json.bz2 ;
+tapioca preprocess data/latest-all.json.bz2 ;
+sort -n -k 1 data/latest-all.unsorted.tsv > data/wikidata-graph.tsv ;
+tapioca compile data/wikidata-graph.tsv ;
+tapioca compute-pagerank data/wikidata-graph.npz ;
+
+# difficulté : le schema SOLR : indiquer le chemin correct vers lang/stopwords_fr.txt 
+# et contractions 
+/home/antoine/solr-8.11.2/bin/solr zk -upconfig -z localhost:9983 -n fr-loc-tapioca -d configsets/fr-loc-tapioca ;
+tapioca index-dump fr-loc-tapioca data/small-wiki.json.bz2 --profile profiles/locations.json
+
+bunzip2 < data/latest-all.json.bz2 | tapioca index-dump fr-loc-tapioca - --profile profiles/locations.json
+bunzip2 < data/small-wiki.json.bz2 | tapioca index-dump fr-loc-tapioca - --profile profiles/locations.json
+
+
+tapioca train-classifier -c fr-loc-tapioca -b my_language_model.pkl -p my_pagerank.npy -d my_dataset.ttl -o my_classifier.pkl
+
+
+
+
+erreur 30 janvier avec frenchtapioca
+Traceback (most recent call last):
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/bin/tapioca", line 33, in <module>
+    sys.exit(load_entry_point('opentapioca', 'console_scripts', 'tapioca')())
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1128, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1053, in main
+    rv = self.invoke(ctx)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1659, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1395, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 754, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/antoine/Documents/GitHub/frenchtapioca/base-tapioca/opentapioca/cli.py", line 86, in compile
+    g.load_from_preprocessed_dump(filename)
+  File "/home/antoine/Documents/GitHub/frenchtapioca/base-tapioca/opentapioca/wikidatagraph.py", line 90, in load_from_preprocessed_dump
+    indices = json.loads(fields[1])
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 81 (char 80)
+Traceback (most recent call last):
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/bin/tapioca", line 33, in <module>
+    sys.exit(load_entry_point('opentapioca', 'console_scripts', 'tapioca')())
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1128, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1053, in main
+    rv = self.invoke(ctx)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1659, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 1395, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/click/core.py", line 754, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/antoine/Documents/GitHub/frenchtapioca/base-tapioca/opentapioca/cli.py", line 99, in compute_pagerank
+    g.load_from_matrix(filename)
+  File "/home/antoine/Documents/GitHub/frenchtapioca/base-tapioca/opentapioca/wikidatagraph.py", line 125, in load_from_matrix
+    self.mat = sparse.load_npz(fname)
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/scipy/sparse/_matrix_io.py", line 125, in load_npz
+    with np.load(file, **PICKLE_KWARGS) as loaded:
+  File "/home/antoine/anaconda3/envs/venvfrenchtapioca/lib/python3.10/site-packages/numpy/lib/npyio.py", line 405, in load
+    fid = stack.enter_context(open(os_fspath(file), "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: 'data/wikidata-graph.npz'

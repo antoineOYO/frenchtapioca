@@ -1,0 +1,8 @@
+{
+    "language": "fr",
+    "name": "coordinates",
+    "solrconfig": "smallfrenchtapioca-schema",
+    "restrict_properties": ["P625"],
+    "restrict_types": [{"type": "Q618123", "property": "P31"}],
+    "alias_properties": []
+}
