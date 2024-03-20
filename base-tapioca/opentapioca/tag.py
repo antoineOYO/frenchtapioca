@@ -11,7 +11,7 @@ class Tag(object):
                  nb_statements=None, nb_sitelinks=None,
                  edges=None, types=None,
                  rank=None, similarities=None,
-                 score=None, valid=None):
+                 score=None, valid=None, coordinates=None):
         """
         :param id: the Wikidata Qid of the linked entity
         :param label: the label of the entity in our preferred language
@@ -26,6 +26,8 @@ class Tag(object):
         :param score: score of the tag as computed by the classifier
         :param types: json representation of type matches
         :param valid: is this tag known to be true for this mention? None if unknown
+
+        :param coordinates: tuple of coordinates (latitude, longitude)
         """
         self.id = id
         self.label = label
@@ -45,6 +47,10 @@ class Tag(object):
         self.score = score
         self.valid = valid
 
+        # if isinstance(coordinates, list):
+        #     self.coords = coordinates
+        #     #print("Coordinates: ", self.coords)
+
     def json(self):
         return {
             'id': self.id,
@@ -58,6 +64,7 @@ class Tag(object):
             'types': self.types,
             'rank': self.rank,
             'score': self.score,
+            #'coordinates': self.coords,
             'valid': self.valid,
         }
 

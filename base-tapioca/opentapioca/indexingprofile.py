@@ -132,10 +132,6 @@ class IndexingProfile(object):
         # Fetch aliases GET ALL TERMS
         aliases = item.get_all_terms()
         aliases.remove(frlabel)
-        #Fetch aliases in French
-        #aliases = item.get_aliases('fr')
-        #aliases.remove(frlabel)
-
 
         # Edges
         edges = item.get_outgoing_edges(include_p31=False, numeric=True)
@@ -149,6 +145,10 @@ class IndexingProfile(object):
         nb_statements = item.get_nb_statements()
         nb_sitelinks = item.get_nb_sitelinks()
 
+        # Coordinates
+        coords = item.get_coordinates()
+        string_coords = str(coords[0]) + "," + str(coords[1])
+        print(string_coords)
         return {'id': item.get('id'),
                 'revid': item.get('lastrevid') or 1,
                'label': frlabel,
@@ -158,7 +158,8 @@ class IndexingProfile(object):
                'aliases': list(aliases),
                'extra_aliases': extra_aliases,
                'nb_statements': nb_statements,
-               'nb_sitelinks': nb_sitelinks}
+               'nb_sitelinks': nb_sitelinks,
+               'coordinates': string_coords,}
 
 
     @classmethod

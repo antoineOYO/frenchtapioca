@@ -11,6 +11,25 @@ class WikidataItemDocument(object):
 
     def __iter__(self):
         return self.json.__iter__()
+    
+    def get_coordinates(self):
+        """
+        Retrieve the coordinates from the JSON representation of the Wikidata item.
+        Returns a tuple containing the latitude and longitude if coordinates are present,
+        otherwise returns None.
+        """
+        coordinates_claim = self.get('claims', {}).get('P625', [])
+        
+        for coordinate_claim in coordinates_claim:
+            try:
+                value = coordinate_claim['mainsnak']['datavalue']['value']
+                if value:
+                    #print(value['latitude'], value['longitude'])
+                    return [value['latitude'], value['longitude']]
+            except (KeyError, TypeError):
+                pass
+        return None
+
 
     def get_outgoing_edges(self, include_p31=True, numeric=True):
         """
@@ -115,7 +134,7 @@ import os
 import json
 
 if __name__ == '__main__':
-    qid = 'Q8502'
+    qid = 'Q30264236'
     filename = os.path.join(
         os.path.dirname(
             os.path.abspath(__file__)), 'tests', 'data', qid+'.json')
@@ -123,3 +142,4 @@ if __name__ == '__main__':
             item = WikidataItemDocument(json.load(f))
 
     print([item.get_default_label('de')])
+    print(item.get_coordinates())
