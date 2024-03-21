@@ -103,6 +103,8 @@ class IndexingProfile(object):
         self.restrict_properties = restrict_properties
         self.alias_properties = alias_properties or []
 
+    import json
+
     def entity_to_document(self, item, type_matcher):
         """
         Given a Wikibase entity, translate it to a Solr document for indexing.
@@ -122,15 +124,17 @@ class IndexingProfile(object):
             pid: item.get_identifiers(pid) != []
             for pid in self.restrict_properties or []
         })
+
         correct_type = any(type_features.values())
         valid_item = correct_type or (not self.restrict_types and not self.restrict_properties)
         if not valid_item:
-            return
+            return None
 
         frlabel = item.get_default_label(self.language)
-        frdesc = item.get('descriptions', {}).get(self.language, {}).get('value')
         if not frlabel:
-            return
+            return None
+
+        frdesc = item.get('descriptions', {}).get(self.language, {}).get('value', '')
 
         # Fetch aliases GET ALL TERMS
         aliases = item.get_all_terms()
@@ -150,23 +154,25 @@ class IndexingProfile(object):
 
         # Coordinates
         coords = item.get_coordinates()
+        string_coords = None
         if coords:
-            string_coords = str(coords[0]) + "," + str(coords[1])
-        
+            string_coords = f"{coords[0]},{coords[1]}"
 
-        return {'id': item.get('id'),
-                'revid': item.get('lastrevid') or 1,
-               'label': frlabel,
-               'desc': frdesc or '',
-               'edges': edges,
-               'types': json.dumps(type_features),
-               'aliases': list(aliases),
-               'extra_aliases': extra_aliases,
-               'nb_statements': nb_statements,
-               'nb_sitelinks': nb_sitelinks,
-               'coordinates': string_coords,
-               'json': json.dumps(item.json),
-               }
+        return {
+            'id': item.get('id'),
+            'revid': item.get('lastrevid') or 1,
+            'label': frlabel,
+            'desc': frdesc,
+            'edges': edges,
+            'types': json.dumps(type_features),
+            'aliases': list(aliases),
+            'extra_aliases': extra_aliases,
+            'nb_statements': nb_statements,
+            'nb_sitelinks': nb_sitelinks,
+            'coordinates': string_coords,
+            'json': json.dumps(item.json),
+        }
+
 
 
     @classmethod

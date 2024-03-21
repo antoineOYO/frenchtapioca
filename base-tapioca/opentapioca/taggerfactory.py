@@ -122,6 +122,7 @@ class TaggerFactory(object):
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             logger.warning('Skipping batch: {}'.format(e))
+            
 
 
 

@@ -15,7 +15,7 @@ class WikidataItemDocument(object):
     def get_coordinates(self):
         """
         Retrieve the coordinates from the JSON representation of the Wikidata item.
-        Returns a tuple containing the latitude and longitude if coordinates are present,
+        Returns a tuple containing the latitude and longitude if coordinates are present and within the valid range,
         otherwise returns None.
         """
         coordinates_claim = self.get('claims', {}).get('P625', [])
@@ -23,9 +23,19 @@ class WikidataItemDocument(object):
         for coordinate_claim in coordinates_claim:
             try:
                 value = coordinate_claim['mainsnak']['datavalue']['value']
-                if value:
-                    #print(value['latitude'], value['longitude'])
-                    return [value['latitude'], value['longitude']]
+                latitude = value.get('latitude')
+                longitude = value.get('longitude')
+                if latitude is not None and longitude is not None:
+                    if isinstance(latitude, (int, float)) and isinstance(longitude, (int, float)):
+
+                        # Check if the coordinates are within the valid range :
+                        # lat and long are within these ranges only on earth,
+                        # and solr only  recognizes coordinates within these ranges.
+                        if -90 <= latitude <= 90 and -180 <= longitude <= 180:
+                            return latitude, longitude
+                        else :
+                            #print("Invalid coordinates ", self.get('id'), latitude, longitude)
+                            return None
             except (KeyError, TypeError):
                 pass
         return None
@@ -143,5 +153,3 @@ if __name__ == '__main__':
 
     print([item.get_default_label('de')])
     print(item.get_coordinates())
-    print(type(json.dumps(item.json)))
-    print(json.dumps(item.json))
