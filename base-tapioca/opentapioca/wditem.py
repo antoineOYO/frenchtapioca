@@ -1,4 +1,4 @@
-
+import json
 class WikidataItemDocument(object):
     def __init__(self, json):
         self.json = json
@@ -143,3 +143,5 @@ if __name__ == '__main__':
 
     print([item.get_default_label('de')])
     print(item.get_coordinates())
+    print(type(json.dumps(item.json)))
+    print(json.dumps(item.json))

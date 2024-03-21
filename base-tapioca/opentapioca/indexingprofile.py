@@ -108,6 +108,9 @@ class IndexingProfile(object):
         Given a Wikibase entity, translate it to a Solr document for indexing.
         :param type_matcher: a TypeMatcher to check subclass inclusion
         :returns: None if the entity should be skipped
+
+        the json keys being returned needs to match 
+        existing fields from the Solr schema
         """
         valid_type_qids = item.get_types()
 
@@ -147,8 +150,10 @@ class IndexingProfile(object):
 
         # Coordinates
         coords = item.get_coordinates()
-        string_coords = str(coords[0]) + "," + str(coords[1])
-        print(string_coords)
+        if coords:
+            string_coords = str(coords[0]) + "," + str(coords[1])
+        
+
         return {'id': item.get('id'),
                 'revid': item.get('lastrevid') or 1,
                'label': frlabel,
@@ -159,7 +164,9 @@ class IndexingProfile(object):
                'extra_aliases': extra_aliases,
                'nb_statements': nb_statements,
                'nb_sitelinks': nb_sitelinks,
-               'coordinates': string_coords,}
+               'coordinates': string_coords,
+               'json': json.dumps(item.json),
+               }
 
 
     @classmethod
